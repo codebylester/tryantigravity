@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SQL Agent | Intelligent Query Generator</title>
+    <meta name="description" content="Generate professional SQL queries from natural language using Google Gemini AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="static/style.css">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h1>SQL <span class="gradient-text">Agent</span></h1>
+            </div>
+            <p class="subtitle">Transform plain English into ready-to-use SQL queries using Gemini AI</p>
+        </header>
+
+        <section class="prompt-section card">
+            <div class="input-wrapper">
+                <textarea id="user-question" placeholder="e.g. Show all employees hired in the last 6 months..."
+                    rows="3"></textarea>
+                <button id="generate-btn" class="primary-btn">
+                    <span>Generate SQL</span>
+                    <svg class="loading-spinner hidden" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <section id="result-section" class="result-section hidden">
+            <div class="card result-card">
+                <div class="card-header">
+                    <h3>Generated Query</h3>
+                    <button id="copy-btn" class="icon-btn" title="Copy to clipboard">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M8 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H16C17.1046 21 18 20.1046 18 19V17M8 5C8 6.10457 8.89543 7 10 7H14C15.1046 7 16 6.10457 16 5M8 5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code id="sql-output"></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="card helper-card">
+                <div class="card-header">
+                    <h3>Schema Management</h3>
+                    <div class="header-actions">
+                        <input type="file" id="schema-upload" accept=".sql,.csv" class="hidden">
+                        <button id="upload-btn" class="secondary-btn mini-btn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16"
+                                height="16">
+                                <path
+                                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            <span>Upload Schema</span>
+                        </button>
+                        <span id="schema-status" class="status-badge">Loaded</span>
+                    </div>
+                </div>
+                <div class="helper-content">
+                    <p class="card-desc">Need to extract your schema first? Use these queries:</p>
+                    <div class="helper-actions">
+                        <button class="db-helper-btn" data-db="postgres">PostgreSQL</button>
+                        <button class="db-helper-btn" data-db="mysql">MySQL</button>
+                        <button class="db-helper-btn" data-db="sqlite">SQLite</button>
+                    </div>
+                </div>
+                <div id="helper-query-container" class="helper-query-container hidden">
+                    <div class="code-block mini-code">
+                        <pre><code id="helper-query-text"></code></pre>
+                        <button id="copy-helper-btn" class="icon-btn mini-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M8 5H6C4.89543 5 4 5.89543 4 7V19C4 20.1046 4.89543 21 6 21H16C17.1046 21 18 20.1046 18 19V17M8 5C8 6.10457 8.89543 7 10 7H14C15.1046 7 16 6.10457 16 5M8 5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="app-footer">
+            <p>Powered by Google Gemini 2.0 Flash</p>
+        </footer>
+    </main>
+
+    <div id="toast" class="toast hidden">Copied to clipboard!</div>
+
+    <script src="static/script.js"></script>
+</body>
+
+</html>
