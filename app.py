@@ -7,10 +7,12 @@ app = Flask(__name__, static_folder='static')
 CORS(app)  # Allow frontend to talk to backend
 
 # Initialize our SQL Agent
+agent_init_error = None
 try:
     agent = SQLAgent(schema_dir="schemas")
 except Exception as e:
     print(f"Error initializing SQL Agent: {e}")
+    agent_init_error = str(e)
     agent = None
 
 @app.route('/')
@@ -27,7 +29,8 @@ def serve_static(path):
 def generate_sql():
     """API endpoint to generate SQL from text."""
     if not agent:
-        return jsonify({"error": "SQL Agent not initialized"}), 500
+        error_msg = f"SQL Agent not initialized: {agent_init_error}" if agent_init_error else "SQL Agent not initialized"
+        return jsonify({"error": error_msg}), 500
 
     data = request.json
     user_question = data.get('question')
