@@ -15,10 +15,10 @@ HOW IT WORKS:
     Then you call generate_query() with any question, and it returns SQL.
 """
 
-import os  # Standard library
-from dotenv import load_dotenv
+import os
+import time
+from tenacity import retry, stop_after_attempt, wait_exponential
 from google import genai
-
 from agent.schema_loader import load_schemas
 from agent.prompt_builder import build_system_instruction, build_user_message
 
@@ -133,21 +133,15 @@ class SQLAgent:
             print(f"Error inferring schema: {e}")
             raise Exception(f"Failed to infer schema from CSV: {e}")
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True
+    )
     def generate_query(self, user_question: str) -> str:
         """
         Generate a SQL query from a natural language question.
-
-        This is the main method you'll use. It:
-        1. Wraps your question into a structured prompt
-        2. Sends it to Gemini with the schema context
-        3. Returns the generated SQL
-
-        Args:
-            user_question: A natural language question, e.g.,
-                           "List all employees hired after 2023"
-
-        Returns:
-            The generated SQL query as a string.
+        Now includes retries for 503 (Busy) API errors.
         """
         # Build the user message
         user_message = build_user_message(user_question)
@@ -157,7 +151,7 @@ class SQLAgent:
             model=self.model,
             config={
                 "system_instruction": self.system_instruction,
-                "temperature": 0.1,  # Low temperature = more precise/deterministic
+                "temperature": 0.1,
             },
             contents=user_message,
         )

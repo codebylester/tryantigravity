@@ -1,5 +1,6 @@
 google-genai>=1.0.0
 python-dotenv>=1.0.0
+tenacity>=8.0.0
 
 flask
 flask-cors
