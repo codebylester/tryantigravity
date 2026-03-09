@@ -37,22 +37,33 @@ def load_schemas(schema_dir: str = "schemas") -> str:
 
     # Check if the directory exists
     if not schema_path.exists():
-        raise FileNotFoundError(
-            f"Schema directory '{schema_dir}' not found. "
-            f"Please create it and add your .sql schema files."
-        )
+        print(f"[WARNING] Schema directory '{schema_dir}' not found. Starting with empty schema.")
+        return ""
 
     # Find all .sql files, sorted alphabetically for consistency
     sql_files = sorted(schema_path.glob("*.sql"))
 
     if not sql_files:
-        raise ValueError(
-            f"No .sql files found in '{schema_dir}'. "
-            f"Please add at least one schema file."
-        )
+        print(f"[WARNING] No .sql files found in '{schema_dir}'. Starting with empty schema.")
+        return ""
 
     # Read each file and combine them with clear separators
     schema_parts = []
+    
+    # SAFETY FALLBACK: If no files were found, provide a basic sample schema
+    if not sql_files:
+        print("[INFO] No external schemas found. Using 'Safety Fallback' (Employees Sample).")
+        return """
+-- Safety Fallback Schema: Classic Employees Database
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10, 2),
+    hire_date DATE
+);
+"""
+
     for sql_file in sql_files:
         content = sql_file.read_text(encoding="utf-8")
         # Add a header so the AI knows which file each schema came from
