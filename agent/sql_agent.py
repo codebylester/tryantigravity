@@ -17,6 +17,7 @@ HOW IT WORKS:
 
 import os
 import time
+from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential
 from google import genai
 from agent.schema_loader import load_schemas

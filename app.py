@@ -6,14 +6,43 @@ from agent.sql_agent import SQLAgent
 app = Flask(__name__, static_folder='static')
 CORS(app)  # Allow frontend to talk to backend
 
-# Initialize our SQL Agent
+# Global state for the SQL Agent
+agent = None
 agent_init_error = None
-try:
-    agent = SQLAgent(schema_dir="schemas")
-except Exception as e:
-    print(f"Error initializing SQL Agent: {e}")
-    agent_init_error = str(e)
-    agent = None
+
+def init_agent():
+    """Attempt to initialize the SQL Agent."""
+    global agent, agent_init_error
+    try:
+        # Check if we have the API key
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY environment variable is missing!")
+            
+        agent = SQLAgent(schema_dir="schemas")
+        agent_init_error = None
+        print("[OK] SQL Agent initialized successfully.")
+    except Exception as e:
+        agent_init_error = str(e)
+        print(f"[CRITICAL] Agent initialization failed: {e}")
+        agent = None
+
+# Try initializing on startup
+init_agent()
+
+@app.route('/health')
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint for Render to verify the app is alive."""
+    if not agent:
+        init_agent()  # Try one more time
+    
+    return jsonify({
+        "status": "healthy" if agent else "degraded",
+        "agent_ready": agent is not None,
+        "error": agent_init_error,
+        "environment": "production" if os.environ.get("RENDER") else "development"
+    }), 200
 
 @app.route('/')
 def index():
